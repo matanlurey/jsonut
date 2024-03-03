@@ -1,0 +1,2 @@
+# Use a less strict set of lints for example code.
+include: package:lints/recommended.yaml

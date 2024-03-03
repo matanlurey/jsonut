@@ -1,0 +1,44 @@
+# https://dart.dev/tools/analysis#enabling-additional-type-checks
+include: package:lints/recommended.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+
+# https://dart.dev/tools/linter-rules
+linter:
+  rules:
+    - always_put_required_named_parameters_first
+    - avoid_annotating_with_dynamic
+    - avoid_double_and_int_checks
+    - avoid_dynamic_calls
+    - avoid_positional_boolean_parameters
+    - avoid_print
+    - avoid_redundant_argument_values
+    - combinators_ordering
+    - comment_references
+    - deprecated_consistency
+    - omit_local_variable_types
+    - only_throw_errors
+    - package_api_docs
+    - prefer_asserts_with_message
+    - prefer_const_constructors
+    - prefer_const_declarations
+    - prefer_constructors_over_static_methods
+    - prefer_final_in_for_each
+    - prefer_final_locals
+    - prefer_single_quotes
+    - public_member_api_docs
+    - require_trailing_commas
+    - sort_constructors_first
+    - sort_pub_dependencies
+    - sort_unnamed_constructors_first
+    - type_annotate_public_apis
+    - unnecessary_breaks
+    - unnecessary_lambdas
+    - unnecessary_library_directive
+    - unnecessary_statements
+    - unreachable_from_main
+    - use_named_constants
