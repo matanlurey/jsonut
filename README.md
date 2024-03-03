@@ -2,6 +2,8 @@
 
 A minimal utility kit for working with JSON in a type-safe manner.
 
+![GitHub Actions Workflow Status](https://github.com/matanlurey/jsonut.dart/actions/workflows/dart.yml/badge.svg)
+
 <!-- See https://dart.dev/guides/libraries/writing-package-pages -->
 
 By default, Dart [offers very little](https://dart.dev/guides/json) in the way
