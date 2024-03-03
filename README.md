@@ -19,8 +19,8 @@ import 'package:jsonut/jsonut.dart';
 void main() {
   final string = '{"name": "John Doe", "age": 42}';
   final person = JsonObject.parse(string);
-  print(person.string('name')); // John Doe
-  print(person.number('age')); // 42
+  print(person['name'].string()); // John Doe
+  print(person['age'].number()); // 42
 }
 ```
 
