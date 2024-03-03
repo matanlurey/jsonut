@@ -12,8 +12,8 @@ void main() {
     });
 
     test('should throw when parsing a string is not a boolean', () {
-      expect(() => JsonBool.parse('null'), throwsFormatException);
-      expect(() => JsonBool.parse('42'), throwsFormatException);
+      expect(() => JsonBool.parse('null'), throwsArgumentError);
+      expect(() => JsonBool.parse('42'), throwsArgumentError);
     });
 
     test('should be usable as a boolean', () {
@@ -40,8 +40,8 @@ void main() {
     });
 
     test('should throw when parsing a string is not a number', () {
-      expect(() => JsonNumber.parse('null'), throwsFormatException);
-      expect(() => JsonNumber.parse('true'), throwsFormatException);
+      expect(() => JsonNumber.parse('null'), throwsArgumentError);
+      expect(() => JsonNumber.parse('true'), throwsArgumentError);
     });
 
     test('should be usable as a number', () {
@@ -64,8 +64,8 @@ void main() {
     });
 
     test('should throw when parsing a string is not a string', () {
-      expect(() => JsonString.parse('null'), throwsFormatException);
-      expect(() => JsonString.parse('42'), throwsFormatException);
+      expect(() => JsonString.parse('null'), throwsArgumentError);
+      expect(() => JsonString.parse('42'), throwsArgumentError);
     });
 
     test('should be usable as a string', () {
@@ -88,8 +88,8 @@ void main() {
     });
 
     test('should throw when parsing a string is not an array', () {
-      expect(() => JsonArray.parse('null'), throwsFormatException);
-      expect(() => JsonArray.parse('42'), throwsFormatException);
+      expect(() => JsonArray.parse('null'), throwsArgumentError);
+      expect(() => JsonArray.parse('42'), throwsArgumentError);
     });
 
     test('should be usable as a list', () {
@@ -124,10 +124,10 @@ void main() {
       }
       ''';
       final object = JsonObject.parse(json);
-      expect(object.string('name'), 'John Doe');
-      expect(object.number('age'), 42);
-      expect(object.boolean('student'), false);
-      expect(object.array('dogs'), ['Fido', 'Rex']);
+      expect(object['name'].string(), 'John Doe');
+      expect(object['age'].number(), 42);
+      expect(object['student'].boolean(), false);
+      expect(object['dogs'].array(), ['Fido', 'Rex']);
     });
 
     test('should throw when parsing a string is not valid JSON', () {
@@ -135,8 +135,8 @@ void main() {
     });
 
     test('should throw when parsing a string is not an object', () {
-      expect(() => JsonObject.parse('null'), throwsFormatException);
-      expect(() => JsonObject.parse('42'), throwsFormatException);
+      expect(() => JsonObject.parse('null'), throwsArgumentError);
+      expect(() => JsonObject.parse('42'), throwsArgumentError);
     });
 
     test('should be usable as a map', () {

@@ -11,10 +11,10 @@ void main() {
 
   final object = JsonObject.parse(json);
 
-  print(object.string('name')); // John Doe
-  print(object.number('age')); // 42
-  print(object.boolean('student')); // false
+  print(object['name'].string()); // John Doe
+  print(object['age'].number()); // 42
+  print(object['student'].boolean()); // false
 
   // Example of a missing field.
-  print(object.stringOr('email')); // null
+  print(object['email'].stringOrNull()); // null
 }
