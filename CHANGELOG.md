@@ -1,5 +1,9 @@
 <!-- https://dart.dev/tools/pub/package-layout#changelog -->
 
+# 0.2.0+1
+
+- Fixed a bug where `JsonArray`'s elements were `JsonValue` not `JsonAny`.
+
 # 0.2.0
 
 - Added `.as` and `.asOrNull` methods to `JsonAny` for inference casting:

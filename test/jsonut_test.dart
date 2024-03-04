@@ -108,6 +108,17 @@ void main() {
         const JsonNumber(3),
       ]);
     });
+
+    test('elements are a JsonAny', () {
+      final array = JsonArray([
+        const JsonNumber(1),
+        const JsonString('two'),
+        const JsonBool(true),
+      ]);
+      expect(array[0].number(), 1);
+      expect(array[1].string(), 'two');
+      expect(array[2].boolean(), true);
+    });
   });
 
   group('JsonObject', () {

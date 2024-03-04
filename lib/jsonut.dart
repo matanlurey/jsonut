@@ -230,7 +230,7 @@ extension type const JsonString(String _value) implements JsonValue, String {
 ///
 /// This type exists to provide a subtype of [JsonValue] that is an array.
 extension type const JsonArray._(List<JsonAny> _value)
-    implements JsonValue, List<JsonValue> {
+    implements JsonValue, List<JsonAny> {
   /// Returns and treats the given [value] as a JSON array.
   ///
   /// This is a zero-cost operation, and is provided as a convenience so that
