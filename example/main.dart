@@ -5,7 +5,7 @@ void main() {
   {
     "name": "John Doe",
     "age": 42,
-    "student": false,
+    "student": false
   }
   ''';
 
