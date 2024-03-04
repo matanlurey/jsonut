@@ -1,6 +1,6 @@
 <!-- https://dart.dev/tools/pub/package-layout#changelog -->
 
-# 0.2.0+1
+# 0.2.1
 
 - Fixed a bug where `JsonArray`'s elements were `JsonValue` not `JsonAny`.
 
