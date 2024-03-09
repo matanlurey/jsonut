@@ -1,5 +1,24 @@
 <!-- https://dart.dev/tools/pub/package-layout#changelog -->
 
+# 0.3.0
+
+- **Breaking change**: Removed `JsonAny.tryFrom`, which was at best, confusing
+  as it accepted a nullable value and returned a nullable value. Either use
+  `JsonAny.from` or `as JsonAny`.
+
+- **Breaking change**: `<JsonAny>.as<T>()` no longer is bound to `JsonValue`.
+  This avoids cases where the type would be inferred as `Never` because it was
+  something like `int`, which should be fine.
+
+- Added `<JsonObject>.deepGet` to get nested values:
+
+  ```dart
+  final object = JsonObject.parse('{"name": {"first": "John", "last": "Doe"}}');
+  final firstName = object.deepGet(['name', 'first']).string();
+  ```
+
+- Improved some error messages.
+
 # 0.2.1
 
 - Fixed a bug where `JsonArray`'s elements were `JsonValue` not `JsonAny`.

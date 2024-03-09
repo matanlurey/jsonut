@@ -1,5 +1,12 @@
+import 'package:checks/checks.dart';
 import 'package:jsonut/jsonut.dart';
 import 'package:test/test.dart';
+
+final _assertionsEnabled = () {
+  var enabled = false;
+  assert(enabled = true, '');
+  return enabled;
+}();
 
 void main() {
   group('JsonBool', () {
@@ -168,5 +175,68 @@ void main() {
         'student': const JsonBool(false),
       });
     });
+
+    test('should get a value at a path', () {
+      // Nested object with "a": {"b": {"c": 42}}
+      final object = JsonObject({
+        'a': JsonObject({
+          'b': JsonObject({
+            'c': const JsonNumber(42),
+          }),
+        }),
+      });
+      expect(object.deepGet(['a', 'b', 'c']).number(), 42);
+    });
+
+    test(
+      'in debug mode, deepGet failure is informative',
+      () {
+        // Nested object with "a": {"b": {"c": 42}}
+        final object = JsonObject({
+          'a': JsonObject({
+            'b': JsonObject({
+              'c': const JsonNumber(42),
+            }),
+          }),
+        });
+        check(() => object.deepGet(['a', 'f', 'c', 'd']))
+            .throws<ArgumentError>()
+            .which((e) {
+          e
+              .has((e) => e.message, 'message')
+              .equals('At a->f: f is not an object.');
+        });
+      },
+      skip: !_assertionsEnabled,
+    );
+  });
+
+  group('JsonAny', () {
+    test(
+      'in debug mode, a cast error from null is informative',
+      () {
+        // ignore: cast_from_null_always_fails
+        const value = null as JsonAny;
+        check(value.boolean).throws<ArgumentError>().which((e) {
+          e
+              .has((e) => e.message, 'message')
+              .equals('Value is null, expected JsonBool.');
+        });
+      },
+      skip: !_assertionsEnabled,
+    );
+
+    test(
+      'in debug mode, a cast error from another type is informative',
+      () {
+        const value = 42 as JsonAny;
+        check(value.boolean).throws<ArgumentError>().which((e) {
+          e
+              .has((e) => e.message, 'message')
+              .equals('Value is int, expected JsonBool.');
+        });
+      },
+      skip: !_assertionsEnabled,
+    );
   });
 }

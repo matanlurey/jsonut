@@ -35,7 +35,6 @@ import 'dart:convert' as dart;
 ///
 /// See also:
 /// - [JsonAny.from]
-/// - [JsonAny.tryFrom]
 extension type const JsonValue._(Object? _value) {
   static T _parseAndCastAs<T extends JsonValue?>(String json) {
     final value = dart.json.decode(json);
@@ -47,6 +46,28 @@ extension type const JsonValue._(Object? _value) {
       'json',
       'Decoded value is ${value.runtimeType}, expected $T',
     );
+  }
+
+  static String _typeToString<T>() {
+    if (T == JsonAny) {
+      return 'JsonAny';
+    }
+    if (T == JsonBool) {
+      return 'JsonBool';
+    }
+    if (T == JsonNumber) {
+      return 'JsonNumber';
+    }
+    if (T == JsonString) {
+      return 'JsonString';
+    }
+    if (T == JsonArray) {
+      return 'JsonArray';
+    }
+    if (T == JsonObject) {
+      return 'JsonObject';
+    }
+    return T.toString();
   }
 
   /// Converts this object into a [JsonAny].
@@ -84,29 +105,27 @@ extension type const JsonAny._(Object? _value) implements JsonValue {
   ///
   /// If the given [value] is not a valid JSON value, an error is thrown.
   factory JsonAny.from(Object? value) {
-    return tryFrom(value) ?? (throw ArgumentError.value(value, 'value'));
+    switch (value) {
+      case JsonString _:
+      case JsonNumber _:
+      case JsonBool _:
+      case JsonArray _:
+      case JsonObject _:
+      case null:
+        return JsonAny._(value);
+      default:
+        throw ArgumentError.value(
+          value,
+          'value',
+          'Not a valid JSON value.',
+        );
+    }
   }
 
   /// Parses and returns the given [input] as a JSON value.
   ///
   /// If parsing fails, a [FormatException] is thrown.
   factory JsonAny.parse(String input) => JsonValue._parseAndCastAs(input);
-
-  /// Tries to convert the given [value] to a [JsonValue].
-  ///
-  /// If the given [value] is not a valid JSON value, `null` is returned.
-  static JsonAny? tryFrom(Object? value) {
-    return switch (value) {
-      JsonBool _ ||
-      JsonNumber _ ||
-      JsonString _ ||
-      JsonArray _ ||
-      JsonObject _ ||
-      null =>
-        JsonAny._(value),
-      _ => null,
-    };
-  }
 
   /// Whether the value is `null`.
   bool get isNull => _value == null;
@@ -132,7 +151,38 @@ extension type const JsonAny._(Object? _value) implements JsonValue {
   ///   final int age;
   /// }
   /// ```
-  T as<T extends JsonValue>() => _value as T;
+  T as<T>() {
+    assert(
+      () {
+        // No additional checks are needed, this will always succeed.
+        if (T == JsonAny) {
+          return true;
+        }
+
+        // If the value is null, throw an error.
+        if (_value == null) {
+          throw ArgumentError.value(
+            _value,
+            'value',
+            'Value is null, expected ${JsonValue._typeToString<T>()}.',
+          );
+        }
+
+        // If the value is not of the expected type, throw an error.
+        if (_value is! T) {
+          throw ArgumentError.value(
+            _value,
+            'value',
+            'Value is ${_value.runtimeType}, expected ${JsonValue._typeToString<T>()}.',
+          );
+        }
+
+        return true;
+      }(),
+      '',
+    );
+    return _value as T;
+  }
 
   /// Returns the value cast to the given type [T], or `null` otherwise.
   T? asOrNull<T extends JsonValue>() {
@@ -288,4 +338,43 @@ extension type const JsonObject._(Map<String, JsonAny> fields)
   /// fields in the JSON object without needing to cast the result or check its
   /// type or nullability.
   JsonAny operator [](String name) => JsonAny._(fields[name]);
+
+  /// Given a path of [keys], returns the value at that path.
+  JsonAny deepGet(Iterable<String> keys) {
+    // In debug mode, print the attempted path and where it failed.
+    // For example, ['a', 'b', 'c', 'd'], and if 'b' is not a map, print:
+    // a->b->c: b is not a map.
+    if (keys is! List) {
+      keys = keys.toList();
+    }
+    assert(
+      () {
+        // The first N - 1 keys should be objects.
+        var map = fields;
+        for (var i = 0; i < keys.length - 1; i++) {
+          final key = keys.elementAt(i);
+          if (map[key] is! JsonObject) {
+            throw ArgumentError.value(
+              keys,
+              'keys',
+              'At ${keys.take(i + 1).join('->')}: $key is not an object.',
+            );
+          }
+          map = (map[key] as JsonAny).object();
+        }
+        return true;
+      }(),
+      '',
+    );
+
+    // In release mode, just return the value.
+    //
+    // For every key except the last one, assume that the value is an object.
+    // For the last key, return it as a JsonAny.
+    var value = this as JsonAny;
+    for (final key in keys) {
+      value = value.object()[key];
+    }
+    return value;
+  }
 }
