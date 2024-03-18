@@ -154,20 +154,6 @@ extension type const JsonAny._(Object? _value) implements JsonValue {
   T as<T>() {
     assert(
       () {
-        // No additional checks are needed, this will always succeed.
-        if (T == JsonAny) {
-          return true;
-        }
-
-        // If the value is null, throw an error.
-        if (_value == null) {
-          throw ArgumentError.value(
-            _value,
-            'value',
-            'Value is null, expected ${JsonValue._typeToString<T>()}.',
-          );
-        }
-
         // If the value is not of the expected type, throw an error.
         if (_value is! T) {
           throw ArgumentError.value(
@@ -197,6 +183,9 @@ extension type const JsonAny._(Object? _value) implements JsonValue {
   /// Returns the value as a boolean, or `null` if it is not a boolean.
   JsonBool? booleanOrNull() => asOrNull();
 
+  /// Returns the value as a boolean, or `false` if it is not a boolean.
+  JsonBool booleanOrFalse() => booleanOrNull() ?? const JsonBool(false);
+
   /// Whether the value is a boolean.
   bool get isBool => _value is JsonBool;
 
@@ -207,6 +196,9 @@ extension type const JsonAny._(Object? _value) implements JsonValue {
 
   /// Returns the value as a number, or `null` if it is not a number.
   JsonNumber? numberOrNull() => asOrNull();
+
+  /// Returns the value as a number, or `0` if it is not a number.
+  JsonNumber numberOrZero() => numberOrNull() ?? const JsonNumber(0);
 
   /// Whether the value is a number.
   bool get isNumber => _value is JsonNumber;
@@ -219,6 +211,9 @@ extension type const JsonAny._(Object? _value) implements JsonValue {
   /// Returns the value as a string, or `null` if it is not a string.
   JsonString? stringOrNull() => asOrNull();
 
+  /// Returns the value as a string, or an empty string if it is not a string.
+  JsonString stringOrEmpty() => stringOrNull() ?? const JsonString('');
+
   /// Whether the value is a string.
   bool get isString => _value is JsonString;
 
@@ -230,6 +225,10 @@ extension type const JsonAny._(Object? _value) implements JsonValue {
   /// Returns the value as an array, or `null` if it is not an array.
   JsonArray? arrayOrNull() => asOrNull();
 
+  /// Returns the value as an array, or an empty array if it is not an array.
+  // ignore: prefer_const_constructors
+  JsonArray arrayOrEmpty() => arrayOrNull() ?? JsonArray._([]);
+
   /// Whether the value is an array.
   bool get isArray => _value is JsonArray;
 
@@ -240,6 +239,10 @@ extension type const JsonAny._(Object? _value) implements JsonValue {
 
   /// Returns the value as an object, or `null` if it is not an object.
   JsonObject? objectOrNull() => asOrNull();
+
+  /// Returns the value as an object, or an empty object if it is not an object.
+  // ignore: prefer_const_constructors
+  JsonObject objectOrEmpty() => objectOrNull() ?? JsonObject._({});
 
   /// Whether the value is an object.
   bool get isObject => _value is JsonObject;

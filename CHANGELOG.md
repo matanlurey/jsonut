@@ -1,5 +1,29 @@
 <!-- https://dart.dev/tools/pub/package-layout#changelog -->
 
+# 0.4.0-dev
+
+- **Breaking change**: `<JsonAny>.as` is now relaxed and will return `null` if
+  the value is `null`, and also supports non-JSON primitive types for
+  convenience:
+
+  ```dart
+  final object = JsonObject.parse('{"age": 13}');
+  final age = object['age'].as<int>();
+  ```
+
+- Added methods to return common default values:
+  - `<JsonAny>.boolOrFalse()`
+  - `<JsonAny>.numberOrZero()`
+  - `<JsonAny>.stringOrEmpty()`
+  - `<JsonAny>.arrayOrEmpty()`
+  - `<JsonAny>.objectOrEmpty()`
+
+  ```dart
+  final object = JsonObject.parse('{"name": "John Doe"}');
+  final email = object['name'].stringOrEmpty();
+  print(email); // ""
+  ```
+
 # 0.3.0
 
 - **Breaking change**: Removed `JsonAny.tryFrom`, which was at best, confusing

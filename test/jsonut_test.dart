@@ -213,20 +213,6 @@ void main() {
 
   group('JsonAny', () {
     test(
-      'in debug mode, a cast error from null is informative',
-      () {
-        // ignore: cast_from_null_always_fails
-        const value = null as JsonAny;
-        check(value.boolean).throws<ArgumentError>().which((e) {
-          e
-              .has((e) => e.message, 'message')
-              .equals('Value is null, expected JsonBool.');
-        });
-      },
-      skip: !_assertionsEnabled,
-    );
-
-    test(
       'in debug mode, a cast error from another type is informative',
       () {
         const value = 42 as JsonAny;
@@ -238,5 +224,40 @@ void main() {
       },
       skip: !_assertionsEnabled,
     );
+  });
+
+  test('as() can represent a `null` value', () {
+    final value = JsonAny.from(null);
+    expect(value.isNull, isTrue);
+  });
+
+  test('as() can represent a non-JSON primitive', () {
+    final value = JsonAny.from(42);
+    expect(value.as<int>(), 42);
+  });
+
+  test('should default to false', () {
+    final value = JsonAny.from(null);
+    expect(value.booleanOrFalse(), isFalse);
+  });
+
+  test('should default to 0', () {
+    final value = JsonAny.from(null);
+    expect(value.numberOrZero(), 0);
+  });
+
+  test('should default to an empty string', () {
+    final value = JsonAny.from(null);
+    expect(value.stringOrEmpty(), '');
+  });
+
+  test('should default to an empty list', () {
+    final value = JsonAny.from(null);
+    expect(value.arrayOrEmpty(), isEmpty);
+  });
+
+  test('should default to an empty map', () {
+    final value = JsonAny.from(null);
+    expect(value.objectOrEmpty(), isEmpty);
   });
 }
