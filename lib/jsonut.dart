@@ -381,3 +381,19 @@ extension type const JsonObject._(Map<String, JsonAny> fields)
     return value;
   }
 }
+
+/// Provides helper methods to work with [Iterable]s of [JsonValue].
+extension JsonIterable<E extends JsonValue> on Iterable<E> {
+  /// Returns an unmodifiable list of the elements of this iterable.
+  ///
+  /// The elements are mapped using the given [toElement] function:
+  ///
+  /// ```dart
+  /// final list = JsonArray([1, 2, 3]);
+  /// final mapped = list.mapUnmodifiableList((value) => value.number());
+  /// print(mapped); // [1, 2, 3]
+  /// ```
+  List<T> mapUnmodifiable<T>(T Function(E) toElement) {
+    return List.unmodifiable(map(toElement));
+  }
+}

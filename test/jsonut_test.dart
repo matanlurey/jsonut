@@ -126,6 +126,22 @@ void main() {
       expect(array[1].string(), 'two');
       expect(array[2].boolean(), true);
     });
+
+    test(
+      'can be easily converted into an unmodifiable list of something',
+      () {
+        const json = '''
+          [
+            "one",
+            "two",
+            "three"
+          ]
+        ''';
+        final array = JsonArray.parse(json).cast<JsonString>();
+        final list = array.mapUnmodifiable((e) => e.toUpperCase());
+        check(list).deepEquals(['ONE', 'TWO', 'THREE']);
+      },
+    );
   });
 
   group('JsonObject', () {

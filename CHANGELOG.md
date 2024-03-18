@@ -24,6 +24,17 @@
   print(email); // ""
   ```
 
+- Added `<Iterable<JsonValue>>.mapUnmodifiable` as a convenience extension to
+  convert an iterable of any valid JSON value to an unmodifiable list of a
+  discrete type:
+
+  ```dart
+  final JsonArray array = getArrayFromSomewhere();
+  final listOfDogs = array.cast<JsonObject>().mapUnmodifiable(Dog.fromJson);
+
+  // We now have a List<Dog> that is unmodifiable.
+  ```
+
 # 0.3.0
 
 - **Breaking change**: Removed `JsonAny.tryFrom`, which was at best, confusing
