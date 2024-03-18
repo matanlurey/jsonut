@@ -11,6 +11,14 @@
   final age = object['age'].as<int>();
   ```
 
+- **Breaking change**: `<JsonAny>.asOrNull` is also relaxed, and supports
+  non-JSON primitive types for convenience:
+
+  ```dart
+  final object = JsonObject.parse('{"age": 13}');
+  final age = object['age'].asOrNull<int>();
+  ```
+
 - Added methods to return common default values:
   - `<JsonAny>.boolOrFalse()`
   - `<JsonAny>.numberOrZero()`

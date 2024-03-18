@@ -171,9 +171,7 @@ extension type const JsonAny._(Object? _value) implements JsonValue {
   }
 
   /// Returns the value cast to the given type [T], or `null` otherwise.
-  T? asOrNull<T extends JsonValue>() {
-    return _value is T ? _value : null;
-  }
+  T? asOrNull<T>() => _value is T ? _value : null;
 
   /// Returns the value as a boolean.
   ///

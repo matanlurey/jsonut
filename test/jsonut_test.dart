@@ -252,6 +252,17 @@ void main() {
     expect(value.as<int>(), 42);
   });
 
+  test('asOrNull() returns the object if it exists', () {
+    const json = '''
+      {
+        "subtitle": "The quick brown fox jumps over the lazy dog."
+      }
+    ''';
+    final object = JsonObject.parse(json);
+    final String? subTitle = object['subtitle'].asOrNull();
+    check(subTitle).equals('The quick brown fox jumps over the lazy dog.');
+  });
+
   test('should default to false', () {
     final value = JsonAny.from(null);
     expect(value.booleanOrFalse(), isFalse);
