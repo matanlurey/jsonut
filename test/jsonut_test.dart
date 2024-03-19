@@ -235,7 +235,7 @@ void main() {
         check(value.boolean).throws<ArgumentError>().which((e) {
           e
               .has((e) => e.message, 'message')
-              .equals('Value is int, expected JsonBool.');
+              .equals('Value is int, expected JsonBoolean.');
         });
       },
       skip: !_assertionsEnabled,
