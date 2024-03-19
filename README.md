@@ -41,7 +41,7 @@ Simply add the package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  jsonut: ^0.1.0
+  jsonut: ^0.4.0
 ```
 
 Or use the command line:

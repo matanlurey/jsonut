@@ -7,6 +7,12 @@ library jsonut;
 
 import 'dart:convert' as dart;
 
+/// A marker interface for all classes that can be converted to JSON.
+abstract interface class ToJson {
+  /// Converts this object to a JSON value.
+  JsonValue toJson();
+}
+
 /// A zero-cost wrapper around any JSON value including `null`.
 ///
 /// This type mostly exists to provide a common supertype for all JSON values,
@@ -52,8 +58,8 @@ extension type const JsonValue._(Object? _value) {
     if (T == JsonAny) {
       return 'JsonAny';
     }
-    if (T == JsonBool) {
-      return 'JsonBool';
+    if (T == JsonBoolean) {
+      return 'JsonBoolean';
     }
     if (T == JsonNumber) {
       return 'JsonNumber';
@@ -108,7 +114,7 @@ extension type const JsonAny._(Object? _value) implements JsonValue {
     switch (value) {
       case JsonString _:
       case JsonNumber _:
-      case JsonBool _:
+      case JsonBoolean _:
       case JsonArray _:
       case JsonObject _:
       case null:
@@ -176,16 +182,16 @@ extension type const JsonAny._(Object? _value) implements JsonValue {
   /// Returns the value as a boolean.
   ///
   /// If the value is not a boolean, an error is thrown.
-  JsonBool boolean() => as();
+  JsonBoolean boolean() => as();
 
   /// Returns the value as a boolean, or `null` if it is not a boolean.
-  JsonBool? booleanOrNull() => asOrNull();
+  JsonBoolean? booleanOrNull() => asOrNull();
 
   /// Returns the value as a boolean, or `false` if it is not a boolean.
-  JsonBool booleanOrFalse() => booleanOrNull() ?? const JsonBool(false);
+  JsonBoolean booleanOrFalse() => booleanOrNull() ?? const JsonBoolean(false);
 
   /// Whether the value is a boolean.
-  bool get isBool => _value is JsonBool;
+  bool get isBool => _value is JsonBoolean;
 
   /// Returns the value as a number.
   ///
@@ -249,12 +255,12 @@ extension type const JsonAny._(Object? _value) implements JsonValue {
 /// A zero-cost wrapper around a JSON boolean.
 ///
 /// This type exists to provide a subtype of [JsonValue] that is a boolean.
-extension type const JsonBool(bool _value) implements JsonValue, bool {
+extension type const JsonBoolean(bool _value) implements JsonValue, bool {
   /// Parses and returns the given [input] as a boolean.
   ///
   /// If parsing fails, or the result is not a boolean, a [FormatException] is
   /// thrown.
-  factory JsonBool.parse(String input) => JsonValue._parseAndCastAs(input);
+  factory JsonBoolean.parse(String input) => JsonValue._parseAndCastAs(input);
 }
 
 /// A zero-cost wrapper around a JSON number.
@@ -375,6 +381,20 @@ extension type const JsonObject._(Map<String, JsonAny> fields)
     var value = this as JsonAny;
     for (final key in keys) {
       value = value.object()[key];
+    }
+    return value;
+  }
+
+  /// Given a path of [keys], returns the value at that path, or `null`.
+  JsonAny deepGetOrNull(Iterable<String> keys) {
+    var value = this as JsonAny;
+    for (final key in keys) {
+      if (value.isObject) {
+        value = value.object()[key];
+      } else {
+        // ignore: cast_from_null_always_fails
+        return null as JsonAny;
+      }
     }
     return value;
   }

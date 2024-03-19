@@ -11,25 +11,25 @@ final _assertionsEnabled = () {
 void main() {
   group('JsonBool', () {
     test('should parse a JSON string representing a boolean', () {
-      expect(JsonBool.parse('true'), true);
+      expect(JsonBoolean.parse('true'), true);
     });
 
     test('should throw when parsing a string is not valid JSON', () {
-      expect(() => JsonBool.parse('invalid'), throwsFormatException);
+      expect(() => JsonBoolean.parse('invalid'), throwsFormatException);
     });
 
     test('should throw when parsing a string is not a boolean', () {
-      expect(() => JsonBool.parse('null'), throwsArgumentError);
-      expect(() => JsonBool.parse('42'), throwsArgumentError);
+      expect(() => JsonBoolean.parse('null'), throwsArgumentError);
+      expect(() => JsonBoolean.parse('42'), throwsArgumentError);
     });
 
     test('should be usable as a boolean', () {
-      const value = JsonBool(true);
+      const value = JsonBoolean(true);
       expect(value, isTrue);
     });
 
     test('should be usable as a JsonValue', () {
-      const JsonValue _ = JsonBool(true);
+      const JsonValue _ = JsonBoolean(true);
     });
   });
 
@@ -120,7 +120,7 @@ void main() {
       final array = JsonArray([
         const JsonNumber(1),
         const JsonString('two'),
-        const JsonBool(true),
+        const JsonBoolean(true),
       ]);
       expect(array[0].number(), 1);
       expect(array[1].string(), 'two');
@@ -177,7 +177,7 @@ void main() {
       final object = JsonObject({
         'name': const JsonString('John Doe'),
         'age': const JsonNumber(42),
-        'student': const JsonBool(false),
+        'student': const JsonBoolean(false),
       });
       expect(object['name'], 'John Doe');
       expect(object['age'], 42);
@@ -188,7 +188,7 @@ void main() {
       final JsonValue _ = JsonObject({
         'name': const JsonString('John Doe'),
         'age': const JsonNumber(42),
-        'student': const JsonBool(false),
+        'student': const JsonBoolean(false),
       });
     });
 
@@ -259,7 +259,7 @@ void main() {
       }
     ''';
     final object = JsonObject.parse(json);
-    final String? subTitle = object['subtitle'].asOrNull();
+    final subTitle = object['subtitle'].asOrNull<String>();
     check(subTitle).equals('The quick brown fox jumps over the lazy dog.');
   });
 

@@ -1,6 +1,6 @@
 <!-- https://dart.dev/tools/pub/package-layout#changelog -->
 
-# 0.4.0-dev
+# 0.4.0
 
 - **Breaking change**: `<JsonAny>.as` is now relaxed and will return `null` if
   the value is `null`, and also supports non-JSON primitive types for
@@ -17,6 +17,13 @@
   ```dart
   final object = JsonObject.parse('{"age": 13}');
   final age = object['age'].asOrNull<int>();
+  ```
+
+- **Breaking change**: Renamed `JsonBool` to `JsonBoolean` for consistency:
+
+  ```diff
+  - JsonBool(true);
+  + JsonBoolean(true);
   ```
 
 - Added methods to return common default values:
@@ -41,6 +48,31 @@
   final listOfDogs = array.cast<JsonObject>().mapUnmodifiable(Dog.fromJson);
 
   // We now have a List<Dog> that is unmodifiable.
+  ```
+
+- Added `<JsonAny>.deepGetOrNull`:
+
+  ```dart
+  final object = JsonObject.parse('{"name": {"first": "John", "last": "Doe"}}');
+  final firstName = object.deepGetOrNull(['name', 'first']).string();
+  ```
+
+- Added the interface class `ToJson`:
+
+  ```dart
+  class Dog implements ToJson {
+    const Dog({required this.name, required this.age});
+    final String name;
+    final int age;
+
+    @override
+    JsonValue toJson() {
+      return JsonObject({
+        'name': name,
+        'age': age,
+      });
+    }
+  }
   ```
 
 # 0.3.0
