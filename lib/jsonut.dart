@@ -27,7 +27,7 @@ bool get _assertionsEnabled {
 /// A marker interface for all classes that can be converted to JSON.
 ///
 /// Note that the use of this interface is _optional_; the Dart SDK uses dynamic
-/// dispatch to invote [toJson] on any object that is passed to
+/// dispatch to invoke [toJson] on any object that is passed to
 /// [dart.jsonEncode] or similar methods.
 ///
 /// See <https://dart.dev/libraries/dart-convert#decoding-and-encoding-json>.

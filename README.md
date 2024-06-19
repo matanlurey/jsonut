@@ -3,6 +3,9 @@
 A minimal utility kit for working with JSON in a type-safe manner.
 
 [![GitHub Actions Workflow Status](https://github.com/matanlurey/jsonut.dart/actions/workflows/dart.yml/badge.svg)](https://github.com/matanlurey/jsonut/actions/workflows/dart.yml)
+[![Coverage Status](https://coveralls.io/repos/github/matanlurey/jsonut/badge.svg?branch=main)](https://coveralls.io/github/matanlurey/jsonut?branch=main)
+[![Pub Package](https://img.shields.io/pub/v/jsonut.svg)](https://pub.dev/packages/jsonut)
+[![Dartdoc reference](https://img.shields.io/badge/dartdoc-reference-blue.svg)](https://pub.dev/documentation/jsonut/latest/)
 
 <!-- See https://dart.dev/guides/libraries/writing-package-pages -->
 
