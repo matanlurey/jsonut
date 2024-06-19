@@ -7,11 +7,39 @@ library jsonut;
 
 import 'dart:convert' as dart;
 
+/// A special decoder that decodes UTF-8 bytes into JSON values.
+///
+/// Backend implementations in the Dart SDK typically optimize this fused
+/// decoder compared to the default [dart.JsonDecoder] which operates on
+/// UTF-16 strings.
+///
+/// See <https://github.com/dart-lang/sdk/issues/55996> for more information.
+final _utf8JsonDecoder = dart.utf8.decoder.fuse(dart.json.decoder);
+
+/// Whether assertions are enabled.
+@pragma('vm:prefer-inline')
+bool get _assertionsEnabled {
+  var enabled = false;
+  assert(enabled = true, '');
+  return enabled;
+}
+
 /// A marker interface for all classes that can be converted to JSON.
+///
+/// Note that the use of this interface is _optional_; the Dart SDK uses dynamic
+/// dispatch to invote [toJson] on any object that is passed to
+/// [dart.jsonEncode] or similar methods.
+///
+/// See <https://dart.dev/libraries/dart-convert#decoding-and-encoding-json>.
 abstract interface class ToJson {
   /// Converts this object to a JSON value.
   JsonValue toJson();
 }
+
+/// A zero-cost wrapper around a JSON `null` value.
+///
+/// This type exists to provide a subtype of [JsonValue] that is `null`.
+const jsonNull = JsonValue._(null);
 
 /// A zero-cost wrapper around any JSON value including `null`.
 ///
@@ -40,43 +68,71 @@ abstract interface class ToJson {
 /// ```
 ///
 /// See also:
-/// - [JsonAny.from]
+/// - [JsonBoolean]
+/// - [JsonNumber]
+/// - [JsonString]
+/// - [JsonArray]
+/// - [JsonObject]
+/// - [JsonAny] and [JsonAny.from]
+/// - [jsonNull]
 extension type const JsonValue._(Object? _value) {
-  static T _parseAndCastAs<T extends JsonValue?>(String json) {
+  /// Parses the given [json] string into a typed JSON value.
+  ///
+  /// If parsing fails, a [FormatException] is thrown.
+  static T parse<T extends JsonValue?>(String json) {
     final value = dart.json.decode(json);
     if (value is T) {
       return value;
     }
-    throw ArgumentError.value(
-      value,
-      'json',
-      'Decoded value is ${value.runtimeType}, expected $T',
+    throw FormatException(
+      'Decoded value is ${JsonValue._typeToString(value.runtimeType)}, '
+      'expected ${JsonValue._typeToString(T)}',
+      json,
     );
   }
 
-  static String _typeToString<T>() {
-    if (T == JsonAny) {
+  /// Parses the given UTF-8 encoded [bytes] into a typed JSON value.
+  ///
+  /// If parsing fails, a [FormatException] is thrown.
+  static T parseUtf8<T extends JsonValue?>(List<int> bytes) {
+    final value = _utf8JsonDecoder.convert(bytes);
+    if (value is T) {
+      return value;
+    }
+    throw FormatException(
+      'Decoded value is ${JsonValue._typeToString(value.runtimeType)}, '
+      'expected ${JsonValue._typeToString(T)}',
+      bytes,
+    );
+  }
+
+  static String _typeToString(Type type) {
+    if (type == JsonAny) {
       return 'JsonAny';
     }
-    if (T == JsonBoolean) {
+    if (type == JsonBoolean || type == bool) {
       return 'JsonBoolean';
     }
-    if (T == JsonNumber) {
+    if (type == JsonNumber || type == num || type == int || type == double) {
       return 'JsonNumber';
     }
-    if (T == JsonString) {
+    if (type == JsonString || type == String) {
       return 'JsonString';
     }
-    if (T == JsonArray) {
+    if (type == JsonArray || type == List) {
       return 'JsonArray';
     }
-    if (T == JsonObject) {
+    if (type == JsonObject || type == Object) {
       return 'JsonObject';
     }
-    return T.toString();
+    if (type == Null) {
+      return 'null';
+    }
+    return type.toString();
   }
 
   /// Converts this object into a [JsonAny].
+  @pragma('vm:prefer-inline')
   JsonAny asAny() => JsonAny._(_value);
 }
 
@@ -106,17 +162,17 @@ extension type const JsonValue._(Object? _value) {
 /// It is undefined behavior to cast (i.e. using `as` or a similar method such
 /// as [List.cast]) an [Object] to a [JsonAny] if it is not a valid JSON value.
 /// See [JsonValue] for more information.
-extension type const JsonAny._(Object? _value) implements JsonValue {
+extension type JsonAny._(Object? _value) implements JsonValue {
   /// Converts the given [value] to a [JsonValue].
   ///
   /// If the given [value] is not a valid JSON value, an error is thrown.
   factory JsonAny.from(Object? value) {
     switch (value) {
+      case JsonObject _:
+      case JsonArray _:
       case JsonString _:
       case JsonNumber _:
       case JsonBoolean _:
-      case JsonArray _:
-      case JsonObject _:
       case null:
         return JsonAny._(value);
       default:
@@ -131,10 +187,32 @@ extension type const JsonAny._(Object? _value) implements JsonValue {
   /// Parses and returns the given [input] as a JSON value.
   ///
   /// If parsing fails, a [FormatException] is thrown.
-  factory JsonAny.parse(String input) => JsonValue._parseAndCastAs(input);
+  factory JsonAny.parse(String input) => JsonValue.parse(input);
+
+  /// Parses and returns the given UTF-8 encoded [bytes] as a JSON value.
+  ///
+  /// If parsing fails, a [FormatException] is thrown.
+  factory JsonAny.parseUtf8(List<int> bytes) {
+    return JsonValue.parseUtf8(bytes);
+  }
 
   /// Whether the value is `null`.
   bool get isNull => _value == null;
+
+  static void _debugCheckIs<T>(Object? value) {
+    if (!_assertionsEnabled) {
+      return;
+    }
+    if (value is! T) {
+      throw ArgumentError.value(
+        value,
+        'value',
+        ''
+            'Value is ${JsonValue._typeToString(value.runtimeType)}, '
+            'expected ${JsonValue._typeToString(T)}.',
+      );
+    }
+  }
 
   /// Returns the value cast to the given type [T].
   ///
@@ -157,98 +235,106 @@ extension type const JsonAny._(Object? _value) implements JsonValue {
   ///   final int age;
   /// }
   /// ```
+  @pragma('vm:prefer-inline')
   T as<T>() {
-    assert(
-      () {
-        // If the value is not of the expected type, throw an error.
-        if (_value is! T) {
-          throw ArgumentError.value(
-            _value,
-            'value',
-            'Value is ${_value.runtimeType}, expected ${JsonValue._typeToString<T>()}.',
-          );
-        }
-
-        return true;
-      }(),
-      '',
-    );
+    _debugCheckIs<T>(_value);
     return _value as T;
   }
 
   /// Returns the value cast to the given type [T], or `null` otherwise.
+  @pragma('vm:prefer-inline')
   T? asOrNull<T>() => _value is T ? _value : null;
 
   /// Returns the value as a boolean.
   ///
   /// If the value is not a boolean, an error is thrown.
+  @pragma('vm:prefer-inline')
   JsonBoolean boolean() => as();
 
   /// Returns the value as a boolean, or `null` if it is not a boolean.
+  @pragma('vm:prefer-inline')
   JsonBoolean? booleanOrNull() => asOrNull();
 
   /// Returns the value as a boolean, or `false` if it is not a boolean.
+  @pragma('vm:prefer-inline')
   JsonBoolean booleanOrFalse() => booleanOrNull() ?? const JsonBoolean(false);
 
   /// Whether the value is a boolean.
+  @pragma('vm:prefer-inline')
   bool get isBool => _value is JsonBoolean;
 
   /// Returns the value as a number.
   ///
   /// If the value is not a number, an error is thrown.
+  @pragma('vm:prefer-inline')
   JsonNumber number() => as();
 
   /// Returns the value as a number, or `null` if it is not a number.
+  @pragma('vm:prefer-inline')
   JsonNumber? numberOrNull() => asOrNull();
 
   /// Returns the value as a number, or `0` if it is not a number.
+  @pragma('vm:prefer-inline')
   JsonNumber numberOrZero() => numberOrNull() ?? const JsonNumber(0);
 
   /// Whether the value is a number.
+  @pragma('vm:prefer-inline')
   bool get isNumber => _value is JsonNumber;
 
   /// Returns the value as a string.
   ///
   /// If the value is not a string, an error is thrown.
+  @pragma('vm:prefer-inline')
   JsonString string() => as();
 
   /// Returns the value as a string, or `null` if it is not a string.
+  @pragma('vm:prefer-inline')
   JsonString? stringOrNull() => asOrNull();
 
   /// Returns the value as a string, or an empty string if it is not a string.
+  @pragma('vm:prefer-inline')
   JsonString stringOrEmpty() => stringOrNull() ?? const JsonString('');
 
   /// Whether the value is a string.
+  @pragma('vm:prefer-inline')
   bool get isString => _value is JsonString;
 
   /// Returns the value as an array.
   ///
   /// If the value is not an array, an error is thrown.
+  @pragma('vm:prefer-inline')
   JsonArray array() => as();
 
   /// Returns the value as an array, or `null` if it is not an array.
+  @pragma('vm:prefer-inline')
   JsonArray? arrayOrNull() => asOrNull();
 
   /// Returns the value as an array, or an empty array if it is not an array.
+  @pragma('vm:prefer-inline')
   // ignore: prefer_const_constructors
   JsonArray arrayOrEmpty() => arrayOrNull() ?? JsonArray._([]);
 
   /// Whether the value is an array.
+  @pragma('vm:prefer-inline')
   bool get isArray => _value is JsonArray;
 
   /// Returns the value as an object.
   ///
   /// If the value is not an object, an error is thrown.
+  @pragma('vm:prefer-inline')
   JsonObject object() => as();
 
   /// Returns the value as an object, or `null` if it is not an object.
+  @pragma('vm:prefer-inline')
   JsonObject? objectOrNull() => asOrNull();
 
   /// Returns the value as an object, or an empty object if it is not an object.
+  @pragma('vm:prefer-inline')
   // ignore: prefer_const_constructors
   JsonObject objectOrEmpty() => objectOrNull() ?? JsonObject._({});
 
   /// Whether the value is an object.
+  @pragma('vm:prefer-inline')
   bool get isObject => _value is JsonObject;
 }
 
@@ -260,7 +346,15 @@ extension type const JsonBoolean(bool _value) implements JsonValue, bool {
   ///
   /// If parsing fails, or the result is not a boolean, a [FormatException] is
   /// thrown.
-  factory JsonBoolean.parse(String input) => JsonValue._parseAndCastAs(input);
+  factory JsonBoolean.parse(String input) => JsonValue.parse(input);
+
+  /// Parses and returns the given UTF8-encoded [bytes] as a boolean.
+  ///
+  /// If parsing fails, or the result is not a boolean, a [FormatException] is
+  /// thrown.
+  factory JsonBoolean.parseUtf8(List<int> bytes) {
+    return JsonValue.parseUtf8(bytes);
+  }
 }
 
 /// A zero-cost wrapper around a JSON number.
@@ -270,7 +364,13 @@ extension type const JsonNumber(num _value) implements JsonValue, num {
   /// Parses and casts the given [input] as a number.
   ///
   /// If parsing fails a [FormatException] is thrown.
-  factory JsonNumber.parse(String input) => JsonValue._parseAndCastAs(input);
+  factory JsonNumber.parse(String input) => JsonValue.parse(input);
+
+  /// Parses and returns the given UTF8-encoded [bytes] as a number.
+  ///
+  /// If parsing fails, or the result is not a number, a [FormatException] is
+  /// thrown.
+  factory JsonNumber.parseUtf8(List<int> bytes) => JsonValue.parseUtf8(bytes);
 }
 
 /// A zero-cost wrapper around a JSON string.
@@ -280,7 +380,13 @@ extension type const JsonString(String _value) implements JsonValue, String {
   /// Parses and casts the given [input] as a string.
   ///
   /// If parsing fails a [FormatException] is thrown.
-  factory JsonString.parse(String input) => JsonValue._parseAndCastAs(input);
+  factory JsonString.parse(String input) => JsonValue.parse(input);
+
+  /// Parses and returns the given UTF8-encoded [bytes] as a string.
+  ///
+  /// If parsing fails, or the result is not a string, a [FormatException] is
+  /// thrown.
+  factory JsonString.parseUtf8(List<int> bytes) => JsonValue.parseUtf8(bytes);
 }
 
 /// A zero-cost wrapper around a JSON array.
@@ -301,7 +407,16 @@ extension type const JsonArray._(List<JsonAny> _value)
   ///
   /// If parsing fails, or the result is not a array, a [FormatException] is
   /// thrown.
-  factory JsonArray.parse(String input) => JsonValue._parseAndCastAs(input);
+  factory JsonArray.parse(String input) => JsonValue.parse(input);
+
+  /// Parses and returns the given UTF8-encoded [bytes] as a array.
+  ///
+  /// If parsing fails, or the result is not a array, a [FormatException] is
+  /// thrown.
+  factory JsonArray.parseUtf8(List<int> bytes) => JsonValue.parseUtf8(bytes);
+
+  /// Casts the elements of this array to the given type [T].
+  List<T> cast<T extends JsonValue>() => _value.cast<T>();
 }
 
 /// A zero-cost wrapper around a JSON object.
@@ -337,14 +452,27 @@ extension type const JsonObject._(Map<String, JsonAny> fields)
   /// Parses and casts the given [input] as an object.
   ///
   /// If parsing fails a [FormatException] is thrown.
-  factory JsonObject.parse(String input) => JsonValue._parseAndCastAs(input);
+  factory JsonObject.parse(String input) => JsonValue.parse(input);
+
+  /// Parses and returns the given UTF8-encoded [bytes] as an object.
+  ///
+  /// If parsing fails, or the result is not an object, a [FormatException] is
+  /// thrown.
+  factory JsonObject.parseUtf8(List<int> bytes) => JsonValue.parseUtf8(bytes);
 
   /// Returns a zero-cost wrapper for the field with the given [name].
   ///
   /// This method shadows the `[]` operator to provide a type-safe way to access
   /// fields in the JSON object without needing to cast the result or check its
   /// type or nullability.
+  @pragma('vm:prefer-inline')
   JsonAny operator [](String name) => JsonAny._(fields[name]);
+
+  /// Sets the field with the given [name] to the given [value].
+  @pragma('vm:prefer-inline')
+  void operator []=(String name, JsonValue value) {
+    fields[name] = value.asAny();
+  }
 
   /// Given a path of [keys], returns the value at that path.
   JsonAny deepGet(Iterable<String> keys) {
@@ -354,25 +482,22 @@ extension type const JsonObject._(Map<String, JsonAny> fields)
     if (keys is! List) {
       keys = keys.toList();
     }
-    assert(
-      () {
-        // The first N - 1 keys should be objects.
-        var map = fields;
-        for (var i = 0; i < keys.length - 1; i++) {
-          final key = keys.elementAt(i);
-          if (map[key] is! JsonObject) {
-            throw ArgumentError.value(
-              keys,
-              'keys',
-              'At ${keys.take(i + 1).join('->')}: $key is not an object.',
-            );
-          }
-          map = (map[key] as JsonAny).object();
+
+    // The first N - 1 keys should be objects.
+    if (_assertionsEnabled) {
+      var map = fields;
+      for (var i = 0; i < keys.length - 1; i++) {
+        final key = keys.elementAt(i);
+        if (map[key] is! JsonObject) {
+          throw ArgumentError.value(
+            keys,
+            'keys',
+            'At ${keys.take(i + 1).join('->')}: $key is not an object.',
+          );
         }
-        return true;
-      }(),
-      '',
-    );
+        map = (map[key] as JsonAny).object();
+      }
+    }
 
     // In release mode, just return the value.
     //
@@ -383,6 +508,18 @@ extension type const JsonObject._(Map<String, JsonAny> fields)
       value = value.object()[key];
     }
     return value;
+  }
+
+  /// Returns the object casting all values to the given type [V].
+  ///
+  /// This method is useful when you know the type of the values, and want to
+  /// avoid the overhead of checking the type and casting them manually. For
+  /// example:
+  /// ```dart
+  /// final object = JsonObject({'key': JsonString('value')}).cast<JsonString>();
+  /// ```
+  Map<JsonString, V> cast<V extends JsonValue>() {
+    return fields.cast<JsonString, V>();
   }
 
   /// Given a path of [keys], returns the value at that path, or `null`.
@@ -398,6 +535,35 @@ extension type const JsonObject._(Map<String, JsonAny> fields)
     }
     return value;
   }
+
+  /// Returns the result of applying the given [convert] to this JSON object.
+  ///
+  /// **Note**: The [convert] function _must_ be synchronous.
+  ///
+  /// ## Example
+  ///
+  /// ```dart
+  /// final person = json.map(
+  ///   (json) => Person(
+  ///     name: json['name'].as(),
+  ///     age: json['age'].as(),
+  ///     email: json['email'].as(),
+  ///   ),
+  /// );
+  /// ```
+  @pragma('vm:prefer-inline')
+  T convert<T>(T Function(JsonObject) convert) {
+    if (_assertionsEnabled) {
+      if (convert is Future<void> Function(JsonObject)) {
+        throw ArgumentError.value(
+          convert,
+          'mapper',
+          'Mapper function must be synchronous.',
+        );
+      }
+    }
+    return convert(this);
+  }
 }
 
 /// Provides helper methods to work with [Iterable]s of [JsonValue].
@@ -408,7 +574,7 @@ extension JsonIterable<E extends JsonValue> on Iterable<E> {
   ///
   /// ```dart
   /// final list = JsonArray([1, 2, 3]);
-  /// final mapped = list.mapUnmodifiableList((value) => value.number());
+  /// final mapped = list.mapUnmodifiable((value) => value.number());
   /// print(mapped); // [1, 2, 3]
   /// ```
   List<T> mapUnmodifiable<T>(T Function(E) toElement) {

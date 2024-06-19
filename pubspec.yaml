@@ -1,16 +1,16 @@
+# Format: https://dart.dev/tools/pub/pubspec
+
 name: jsonut
+description: A minimal utility kit for working with JSON in a typesafe manner.
 version: 0.4.0
 
-# https://dart.dev/tools/pub/pubspec
-
-description: A minimal utility kit for working with JSON in a typesafe manner.
 environment:
   sdk: ^3.3.0
 
 repository: https://github.com/matanlurey/jsonut
-issue_tracker: https://github.com/matanlurey/jsonut/issues
 
 dev_dependencies:
+  benchmark_harness: ^2.2.2
   checks: ^0.3.0
   coverage: ^1.7.2
   lints: ^3.0.0

@@ -59,3 +59,40 @@ Or, even just copy paste the code (a _single_ `.dart` file) into your project:
 ```sh
 curl -o lib/jsonut.dart https://raw.githubusercontent.com/matanlurey/jsonut/main/lib/jsonut.dart
 ```
+
+## Benchmarks
+
+A basic decoding benchmark is included in the `benchmark/` directory. To run it:
+
+```sh
+# JIT
+dart run benchmark/decode.dart
+
+# AOT
+dart compile exe benchmark/decode.dart
+./benchmark/decode.exe
+```
+
+On my machine™, a M2 MacBook Pro, there is roughly a <10% overhead compared to
+just using the `object['...'] as ...` pattern, or dynamic calls in JIT mode. In AOT mode, `jsonut` is faster than dynamic calls, and ~3% slower at decoding.
+
+In short, the overhead is minimal compared to the benefits.
+
+## Contributing
+
+The following are guidelines for contributing to this package:
+
+- **Issues**: Open an issue for any non-trivial change you'd like to make.
+- **Pull Requests**: Open a PR against the `main` branch.
+- **Testing**: Add tests for any new functionality or behavior changes.
+- **Dependencies**: Avoid adding dependencies (dev-dependencies are fine~ish).
+
+To check code coverage locally, run:
+
+```sh
+# Generate coverage report
+dart run coverage:test_with_coverage -- -P coverage
+
+# Open coverage report if you have `genhtml` installed
+genhtml coverage/lcov.info -o coverage/html && open coverage/html/index.html
+```

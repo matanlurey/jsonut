@@ -1,5 +1,69 @@
 <!-- https://dart.dev/tools/pub/package-layout#changelog -->
 
+# 0.4.1
+
+- **Performance**: Each `<JsonValue>` type now has a `parseUtf8` method to
+  efficiently parse UTF-8 encoded JSON strings. This is useful for cases where
+  the JSON string is already encoded as UTF-8, such as when reading from a file
+  or network stream.
+
+  ```dart
+  final bytes = utf8.encode('{"name": "John Doe"}');
+  final object = JsonObject.parseUtf8(bytes);
+  ```
+
+  See <https://github.com/dart-lang/sdk/issues/55996> for more information.
+
+- **Bug fix**: In error messages, the type of the value is now included in the
+  error message. This makes it easier to understand what went wrong when
+  parsing. For example:
+
+  ```dart
+  final object = JsonObject.parse('{"name": "John Doe"}');
+
+  // ERROR: Expected a JsonNumber, but got a JsonString.
+  final age = object['name'].number();
+  ```
+
+- Added `<JsonObject>.convert` to make it convenient to parse multiple values
+  from a JSON object:
+
+  ```dart
+  final object = JsonObject.parse('{"name": "John Doe", "age": 42}');
+  final person = object.convert((o) {
+    return Person(
+      name: o['name'].as(),
+      age: o['age'].as(),
+    );
+  });
+  ```
+
+- Added top-level `jsonNull` constant for convenience:
+
+  ```dart
+  final object = JsonObject.parse('{"name": null}');
+  final name = object['name'];
+  print(name == jsonNull); // true
+  ```
+
+- Added `JsonValue.parse` and `.parseUtf8` methods for type inference usage:
+
+  ```dart
+  final object = JsonValue.parse<JsonObject>('{"name": "John Doe"}');
+  print(object['name'].string());
+  ```
+
+- Added `<JsonArray>.cast` and `<JsonObject>.cast` as more permisive methods
+  that accept types of `T extends JsonValue` instead of `T extends JsonAny`,
+  which is more permissive:
+
+  ```dart
+  final array = JsonArray([JsonObject({'name': 'John Doe'})]);
+  final list = array.cast<JsonObject>();
+  ```
+
+  Added `<JsonObject>.['...'] = value` as well with similar behavior.
+
 # 0.4.0
 
 - **Breaking change**: `<JsonAny>.as` is now relaxed and will return `null` if
