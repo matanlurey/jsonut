@@ -2,7 +2,7 @@
 
 name: jsonut
 description: A minimal utility kit for working with JSON in a typesafe manner.
-version: 0.4.0
+version: 0.4.1
 
 environment:
   sdk: ^3.3.0
